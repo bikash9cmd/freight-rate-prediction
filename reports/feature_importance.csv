@@ -1,0 +1,14 @@
+,gain_share
+quote_signal,0.2204
+straight_line_mi,0.1682
+log_distance,0.1519
+equipment,0.1373
+daily_market_index,0.0841
+weight,0.0658
+market_index,0.0371
+pickup_lat,0.0252
+delivery_lat,0.0243
+lon_change,0.0232
+pickup_lon,0.0222
+delivery_lon,0.0222
+lat_change,0.0179
