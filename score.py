@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-
 EXPECTED_ROWS = 12_000
 EXPECTED_IDS = {f"TE-{index:06d}" for index in range(1, EXPECTED_ROWS + 1)}
 DECEMBER_DATES = pd.date_range("2025-12-01", "2025-12-31", freq="D")
@@ -43,7 +42,9 @@ def numeric_series(frame: pd.DataFrame, column: str, label: str) -> pd.Series:
 
 def validate_predictions(predictions: pd.DataFrame) -> None:
     if list(predictions.columns) != ["load_id", "predicted_rate"]:
-        fail("predictions must contain exactly two columns in this order: load_id,predicted_rate")
+        fail(
+            "predictions must contain exactly two columns in this order: load_id,predicted_rate"
+        )
     if len(predictions) != EXPECTED_ROWS:
         fail(f"predictions must contain exactly {EXPECTED_ROWS:,} rows")
     if predictions["load_id"].isna().any() or predictions["load_id"].duplicated().any():
@@ -64,9 +65,19 @@ def validate_predictions(predictions: pd.DataFrame) -> None:
 
 
 def validate_december(frame: pd.DataFrame) -> pd.DataFrame:
-    columns = ["pickup", "delivery", "distance", "equipment", "weight", "date", "predicted_rate"]
+    columns = [
+        "pickup",
+        "delivery",
+        "distance",
+        "equipment",
+        "weight",
+        "date",
+        "predicted_rate",
+    ]
     if list(frame.columns) != columns:
-        fail("December predictions must keep the original seven columns and column order")
+        fail(
+            "December predictions must keep the original seven columns and column order"
+        )
 
     result = frame.copy()
     result["date"] = pd.to_datetime(result["date"], errors="coerce")
@@ -74,12 +85,16 @@ def validate_december(frame: pd.DataFrame) -> pd.DataFrame:
         fail("December predictions contains invalid dates")
     result["distance"] = numeric_series(result, "distance", "December predictions")
     result["weight"] = numeric_series(result, "weight", "December predictions")
-    result["predicted_rate"] = numeric_series(result, "predicted_rate", "December predictions")
+    result["predicted_rate"] = numeric_series(
+        result, "predicted_rate", "December predictions"
+    )
 
     if result["date"].duplicated().any():
         fail("December predictions contains duplicate dates")
     if len(result) != 31 or set(result["date"]) != set(DECEMBER_DATES):
-        fail("December predictions must contain one row for every day from 2025-12-01 to 2025-12-31")
+        fail(
+            "December predictions must contain one row for every day from 2025-12-01 to 2025-12-31"
+        )
     if not result["pickup"].eq(FIXED_PICKUP).all():
         fail(f"December pickup must be {FIXED_PICKUP} for all rows")
     if not result["delivery"].eq(FIXED_DELIVERY).all():
@@ -114,7 +129,13 @@ def save_december_chart(december: pd.DataFrame, output: Path) -> None:
         color=color,
         alpha=0.08,
     )
-    axis.set_title("Candidate: December 2025 Predicted Load Rate", loc="left", fontsize=15, fontweight="bold", pad=12)
+    axis.set_title(
+        "Candidate: December 2025 Predicted Load Rate",
+        loc="left",
+        fontsize=15,
+        fontweight="bold",
+        pad=12,
+    )
     axis.set_ylabel("Predicted rate ($)")
     axis.grid(axis="y", color="#D9E2E4", linewidth=0.8)
     axis.spines[["top", "right"]].set_visible(False)
@@ -137,7 +158,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Validate candidate output files and generate the fixed December chart."
     )
-    parser.add_argument("--predictions", required=True, help="CSV with load_id,predicted_rate")
+    parser.add_argument(
+        "--predictions", required=True, help="CSV with load_id,predicted_rate"
+    )
     parser.add_argument(
         "--december-predictions",
         required=True,
@@ -147,7 +170,9 @@ def main() -> None:
     args = parser.parse_args()
 
     validate_predictions(read_csv(Path(args.predictions), "predictions"))
-    december = validate_december(read_csv(Path(args.december_predictions), "December predictions"))
+    december = validate_december(
+        read_csv(Path(args.december_predictions), "December predictions")
+    )
     output = Path(args.output_dir)
     output.mkdir(parents=True, exist_ok=True)
     chart = output / "candidate_december.png"
