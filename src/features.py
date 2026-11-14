@@ -1,4 +1,5 @@
 """Data cleaning and feature engineering for the freight rate model."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -11,8 +12,12 @@ CAT_COLS = ["equipment"]
 FEATURES = [
     "log_distance",
     "straight_line_mi",
-    "pickup_lat", "pickup_lon", "delivery_lat", "delivery_lon",
-    "lat_change", "lon_change",
+    "pickup_lat",
+    "pickup_lon",
+    "delivery_lat",
+    "delivery_lon",
+    "lat_change",
+    "lon_change",
     "weight",
     "market_index",
     "daily_market_index",
@@ -23,7 +28,10 @@ FEATURES = [
 
 def haversine_miles(lat1, lon1, lat2, lon2):
     lat1, lon1, lat2, lon2 = map(np.radians, (lat1, lon1, lat2, lon2))
-    a = np.sin((lat2 - lat1) / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2) ** 2
+    a = (
+        np.sin((lat2 - lat1) / 2) ** 2
+        + np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2) ** 2
+    )
     return 2 * EARTH_RADIUS_MI * np.arcsin(np.sqrt(a))
 
 
@@ -62,18 +70,32 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     x = pd.DataFrame(index=df.index)
     x["log_distance"] = np.log(df["distance"])
     x["straight_line_mi"] = df["straight_line_mi"]
-    for c in ["pickup_lat", "pickup_lon", "delivery_lat", "delivery_lon", "weight",
-              "market_index", "daily_market_index", "quote_signal"]:
+    for c in [
+        "pickup_lat",
+        "pickup_lon",
+        "delivery_lat",
+        "delivery_lon",
+        "weight",
+        "market_index",
+        "daily_market_index",
+        "quote_signal",
+    ]:
         x[c] = df[c]
     x["lat_change"] = df["delivery_lat"] - df["pickup_lat"]
     x["lon_change"] = df["delivery_lon"] - df["pickup_lon"]
-    x["equipment"] = df["equipment"].astype(pd.CategoricalDtype(["Dry Van", "Reefer", "Flatbed"]))
+    x["equipment"] = df["equipment"].astype(
+        pd.CategoricalDtype(["Dry Van", "Reefer", "Flatbed"])
+    )
     return x[FEATURES]
 
 
 def fit_cleaning_stats(train: pd.DataFrame) -> tuple[float, pd.Series]:
-    straight = haversine_miles(train["pickup_lat"], train["pickup_lon"],
-                               train["delivery_lat"], train["delivery_lon"])
+    straight = haversine_miles(
+        train["pickup_lat"],
+        train["pickup_lon"],
+        train["delivery_lat"],
+        train["delivery_lon"],
+    )
     ratio = train["distance"] / straight
     good = ratio.between(ROAD_FACTOR_MIN, ROAD_FACTOR_MAX)
     road_factor = float(ratio[good].median())
@@ -94,11 +116,15 @@ def flag_label_outliers(df: pd.DataFrame, factor: float = 1.6) -> pd.Series:
     which looks like unit/entry errors rather than real market moves.
     """
     rpm = df["posted_rate"] / df["distance"]
-    lane_median = rpm.groupby([df["pickup"], df["delivery"], df["equipment"]]).transform("median")
+    lane_median = rpm.groupby(
+        [df["pickup"], df["delivery"], df["equipment"]]
+    ).transform("median")
     # Lanes with few loads: fall back to equipment + distance band median.
     band = pd.cut(df["distance"], [0, 250, 500, 1000, 1500, 2000, 5000])
     fallback = rpm.groupby([df["equipment"], band], observed=True).transform("median")
-    lane_count = rpm.groupby([df["pickup"], df["delivery"], df["equipment"]]).transform("size")
+    lane_count = rpm.groupby([df["pickup"], df["delivery"], df["equipment"]]).transform(
+        "size"
+    )
     reference = lane_median.where(lane_count >= 5, fallback)
     ratio = rpm / reference
     return (ratio > factor) | (ratio < 1 / factor)

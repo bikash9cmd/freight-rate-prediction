@@ -4,8 +4,10 @@ Predicts the posted rate for a truckload from lane, equipment, weight, date and 
 
 ## Run
 
+Requires Python 3.10-3.13 (pandas 2.x does not run on Python 3.14+).
+
 ```bash
-python -m venv .venv && source .venv/bin/activate
+python3.13 -m venv .venv && source .venv/bin/activate
 python -m pip install -r requirements.txt
 python src/train.py          # backtest, train final model, write predictions
 python score.py --predictions validation_predictions.csv --december-predictions data/december_chart_inputs.csv
