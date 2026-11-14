@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "charliermarsh.ruff",
+    "mechatroner.rainbow-csv",
+    "janisdd.vscode-edit-csv",
+    "ms-toolsai.datawrangler",
+    "tomoki1207.pdf"
+  ]
+}

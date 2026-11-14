@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .venv/
+.ruff_cache/
+
+# Spotter assessment brief (kept locally, not published)
+freight-rate-ml-assessment.pdf
